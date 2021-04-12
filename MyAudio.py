@@ -2,7 +2,7 @@ import wave
 from pyaudio import PyAudio, paInt16
 import re
 
-framerate = 8000
+framerate = 44100
 NUM_SAMPLES = 1024
 channels = 1
 sampwidth = 2
@@ -37,7 +37,7 @@ def my_record():
     frames_per_buffer=NUM_SAMPLES)
     my_buf = []
     count = 0
-    while count < TIME * 10: #控制錄音時間
+    while count < TIME * 20: #控制錄音時間
         string_audio_data = stream.read(NUM_SAMPLES)
         my_buf.append(string_audio_data)
         count += 1

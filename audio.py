@@ -1,110 +1,98 @@
 import wave
 from pyaudio import PyAudio, paInt16
+from tqdm import trange
+from argparse import ArgumentParser
 import re
-import abc
 
-class BaseAudio(abc.ABC):
-    @abc.abstractclassmethod
-    def save_wave_file(self):
-        pass
+def command_args():
+    parse = ArgumentParser(description='sound record program')
+    parse.add_argument('-t', '--time', type=int, required=True, dest='time', help='set record second')
+    parse.add_argument('-f', '--file-name', type=str, required=True, dest='filename', help='set output file name')
+    args = parse.parse_args()
+    return args
 
-    @abc.abstractclassmethod
-    def save_mp3_file(self):
-        pass
+class Audio():
+    def __init__(self, sce):
+        self.scecond = sce + 1
+        self._framerate = 44100
+        self._NUM_SAMPLES = 1024
+        self._channels = 1
+        self._sampwidth = 2
 
-    @abc.abstractclassmethod
-    def record(self):
-        pass
-
-    @abc.abstractclassmethod
-    def play(self):
-        pass
-
-    @abc.abstractclassmethod
-    def __get_input_device(self):
-        pass
-
-    @abc.abstractclassmethod
     @property
     def time(self):
-        pass
+        return int( self._framerate / self._NUM_SAMPLES * self.scecond )
 
-    @abc.abstractclassmethod
-    @time.setter
-    def time(self, record_time):
-        pass
+    @property
+    def scecond(self):
+        return self._scecond
 
-    @abc.abstractclassmethod
+    @scecond.setter
+    def scecond(self, sce):
+        self._scecond = sce
+
     @property
     def filename(self):
-        pass
+        return self._filename
 
-    @abc.abstractclassmethod
     @filename.setter
     def filename(self, name):
+        self._filename = name
+
+    def record(self):
+        if self.check_device():
+            pa = PyAudio()
+            stream = pa.open(format=paInt16,channels=self._channels,
+            rate=self._framerate,input=True,
+            input_device_index=self.__get_input_device(),
+            frames_per_buffer=self._NUM_SAMPLES)
+            my_buf = []
+            for _ in trange(self.time):
+                string_audio_data = stream.read(self._NUM_SAMPLES)
+                my_buf.append(string_audio_data)
+            self.save_wave(my_buf)
+            stream.close()
+
+    def play(self):
+        print ('play wav file')
         pass
 
-framerate = 8000
-NUM_SAMPLES = 1024
-channels = 1
-sampwidth = 2
-TIME = 2
+    def __get_input_device(self):
+        p = PyAudio()
+        info = p.get_host_api_info_by_index(0)
+        numdevices = info.get('deviceCount')
+        for i in range(0, numdevices):
+            if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
+                # print ("input Device id ", i, " - ", p.get_device_info_by_host_api_device_index(0,i).get('name'))
+                # print ((re.search('EZM-001', p.get_device_info_by_host_api_device_index(0, i).get('name'))) is not None)
+                if ((re.search('EZM-001', p.get_device_info_by_host_api_device_index(0, i).get('name'))) is not None):
+                    return i
 
-def save_wave_file(filename,data):
-    '''save the date to the wavfile'''
-    wf = wave.open(filename,'wb')
-    wf.setnchannels(channels)
-    wf.setsampwidth(sampwidth)
-    wf.setframerate(framerate)
-    wf.writeframes(b"".join(data))
-    wf.close()
+    def check_device(self):
+        if self.__get_input_device() is None:
+            print ("Error: Not find your device")
+            # return False
+            # develop test
+            return True
+        else:
+            return True
 
-def getDeviceIndex():
-    p = PyAudio()
-    info = p.get_host_api_info_by_index(0)
-    numdevices = info.get('deviceCount')
-    for i in range(0, numdevices):
-        if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
-            print ("input Device id ", i, " - ", p.get_device_info_by_host_api_device_index(0,i).get('name'))
-            print ((re.search('EZM-001', p.get_device_info_by_host_api_device_index(0, i).get('name'))) is not None)
-            if ((re.search('EZM-001', p.get_device_info_by_host_api_device_index(0, i).get('name'))) is not None):
-                print ('select this device')
-                return i
+    def save_wave(self, data):
+        wf = wave.open(self.filename + ".wav",'wb')
+        wf.setnchannels(self._channels)
+        wf.setsampwidth(self._sampwidth)
+        wf.setframerate(self._framerate)
+        wf.writeframes(b"".join(data))
+        wf.close()
 
-def my_record():
-    pa = PyAudio()
-    stream = pa.open(format=paInt16,channels=1,
-    rate = framerate,input = True,
-    input_device_index=getDeviceIndex(),
-    frames_per_buffer=NUM_SAMPLES)
-    my_buf = []
-    count = 0
-    while count < TIME * 10: #控制錄音時間
-        string_audio_data = stream.read(NUM_SAMPLES)
-        my_buf.append(string_audio_data)
-        count += 1
-        print('.')
-    save_wave_file('01.wav',my_buf)
-    stream.close()
+    def save_mp3(self):
+        print ('save mp3')
+        pass
 
-chunk = 1024
-def play():
-    wf = wave.open(r"01.wav",'rb')
-    p = PyAudio()
-    stream = p.open(format=p.get_format_from_width(wf.getsampwidth()),channels=
-    wf.getnchannels(),rate=wf.getframerate(),output=True)
-    while True:
-        # print('.', end='')
-        data = wf.readframes(chunk)
-        # print(data)
-        if data == b"":
-            break
-        stream.write(data)
-    stream.close()
-    p.terminate()
 
 if __name__ == '__main__':
-    my_record()
-    print('Over!') 
-    play()
-    # getDeviceIndex()
+    args = command_args()
+    au = Audio(args.time)
+    au.filename = args.filename
+    au.record()
+    au.play()
