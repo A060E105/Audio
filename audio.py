@@ -6,7 +6,7 @@ import re
 
 def command_args():
     parse = ArgumentParser(description='sound record program')
-    parse.add_argument('-t', '--time', type=int, required=True, dest='time', help='set record second')
+    parse.add_argument('-t', '--time', type=int, required=True, dest='time', help='set sound recording time, unit is second')
     parse.add_argument('-f', '--file-name', type=str, required=True, dest='filename', help='set output file name')
     args = parse.parse_args()
     return args
