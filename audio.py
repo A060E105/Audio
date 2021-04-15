@@ -12,8 +12,8 @@ def command_args():
     return args
 
 class Audio():
-    def __init__(self, sce):
-        self.scecond = sce + 1
+    def __init__(self, sec):
+        self.second = sec + 1
         self._framerate = 44100
         self._NUM_SAMPLES = 1024
         self._channels = 1
@@ -21,15 +21,15 @@ class Audio():
 
     @property
     def time(self):
-        return int( self._framerate / self._NUM_SAMPLES * self.scecond )
+        return int( self._framerate / self._NUM_SAMPLES * self.second )
 
     @property
-    def scecond(self):
-        return self._scecond
+    def second(self):
+        return self._second
 
-    @scecond.setter
-    def scecond(self, sce):
-        self._scecond = sce
+    @second.setter
+    def second(self, sec):
+        self._second = sec
 
     @property
     def filename(self):
@@ -89,6 +89,8 @@ class Audio():
         print ('save mp3')
         pass
 
+    def save_spectrogram(self):
+        pass
 
 if __name__ == '__main__':
     args = command_args()
