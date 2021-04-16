@@ -2,6 +2,8 @@ import wave
 from pyaudio import PyAudio, paInt16
 from tqdm import trange
 from argparse import ArgumentParser
+from os import path
+import json
 import re
 
 def command_args():
@@ -14,14 +16,32 @@ def command_args():
 class Audio():
     def __init__(self, sec):
         self.second = sec + 1
-        self._framerate = 44100
-        self._NUM_SAMPLES = 1024
-        self._channels = 1
-        self._sampwidth = 2
+        self.init_settings_argument()
+        self.get_settings_arguments()
+
+    def init_settings_argument(self):
+        self._argument = {}
+        self._argument['settings'] = {}
+        self._argument['settings']['framerate'] = 44100
+        self._argument['settings']['num_samples'] = 1024
+        self._argument['settings']['channels'] = 2
+        self._argument['settings']['sampwidth'] = 2
+
+    def get_settings_arguments(self):
+        if path.isfile('audio.settings'):
+            with open('audio.settings', 'r+') as file:
+                self._argument = json.load(file)
+        else:
+            with open('audio.settings', 'w+') as file:
+                json.dump(self._argument, file, indent=4)
+
+    def save_settings(self):
+        with open('audio.settings', 'w+') as file:
+            json.dump(self._argument, file, indent=4)
 
     @property
     def time(self):
-        return int( self._framerate / self._NUM_SAMPLES * self.second )
+        return int( self._argument['settings']['framerate'] / self._argument['settings']['num_samples'] * self.second )
 
     @property
     def second(self):
@@ -42,13 +62,13 @@ class Audio():
     def record(self):
         if self.check_device():
             pa = PyAudio()
-            stream = pa.open(format=paInt16,channels=self._channels,
-            rate=self._framerate,input=True,
+            stream = pa.open(format=paInt16,channels=self._argument['settings']['channels'],
+            rate=self._argument['settings']['framerate'],input=True,
             input_device_index=self.__get_input_device(),
-            frames_per_buffer=self._NUM_SAMPLES)
+            frames_per_buffer=self._argument['settings']['num_samples'])
             my_buf = []
             for _ in trange(self.time):
-                string_audio_data = stream.read(self._NUM_SAMPLES)
+                string_audio_data = stream.read(self._argument['settings']['num_samples'])
                 my_buf.append(string_audio_data)
             self.save_wave(my_buf)
             stream.close()
@@ -79,9 +99,9 @@ class Audio():
 
     def save_wave(self, data):
         wf = wave.open(self.filename + ".wav",'wb')
-        wf.setnchannels(self._channels)
-        wf.setsampwidth(self._sampwidth)
-        wf.setframerate(self._framerate)
+        wf.setnchannels(self._argument['settings']['channels'])
+        wf.setsampwidth(self._argument['settings']['sampwidth'])
+        wf.setframerate(self._argument['settings']['framerate'])
         wf.writeframes(b"".join(data))
         wf.close()
 
