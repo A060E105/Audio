@@ -21,6 +21,15 @@
 # class Audio
 
 ### __init__(self, sec)
+### init_settings_argument(self)
+    Description:
+        initialization settings arguments
+### get_settings_arguments(self)
+    Description:
+        read settings file, if settings file does not exist, create new settings file
+### save_settings(self)
+    Description:
+        save settings arguments in settings file
 ### time(self)
     Description:
         get recording time count
