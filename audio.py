@@ -60,11 +60,11 @@ class Audio():
         self._filename = name
 
     def record(self):
-        if self.check_device():
+        if self.hasDevice():
             pa = PyAudio()
             stream = pa.open(format=paInt16,channels=self._argument['settings']['channels'],
             rate=self._argument['settings']['framerate'],input=True,
-            input_device_index=self.__get_input_device(),
+            input_device_index=self.__getDevice(),
             frames_per_buffer=self._argument['settings']['num_samples'])
             my_buf = []
             for _ in trange(self.time):
@@ -77,7 +77,7 @@ class Audio():
         print ('play wav file')
         pass
 
-    def __get_input_device(self):
+    def __getDevice(self):
         p = PyAudio()
         info = p.get_host_api_info_by_index(0)
         numdevices = info.get('deviceCount')
@@ -88,8 +88,8 @@ class Audio():
                 if ((re.search('EZM-001', p.get_device_info_by_host_api_device_index(0, i).get('name'))) is not None):
                     return i
 
-    def check_device(self):
-        if self.__get_input_device() is None:
+    def hasDevice(self):
+        if self.__getDevice() is None:
             print ("Error: Not find your device")
             # return False
             # develop test
