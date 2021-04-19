@@ -20,28 +20,80 @@ class Audio():
         self.get_settings_arguments()
 
     def init_settings_argument(self):
-        self._argument = {}
-        self._argument['settings'] = {}
-        self._argument['settings']['framerate'] = 44100
-        self._argument['settings']['num_samples'] = 1024
-        self._argument['settings']['channels'] = 2
-        self._argument['settings']['sampwidth'] = 2
+        self.framerate = 44100
+        self.num_samples = 1024
+        self.channels = 2
+        self.sampwidth = 2
 
     def get_settings_arguments(self):
         if path.isfile('audio.settings'):
             with open('audio.settings', 'r+') as file:
-                self._argument = json.load(file)
+                argument = json.load(file)
+                self.framerate = argument['settings']['framerate']
+                self.num_samples = argument['settings']['num_samples']
+                self.channels = argument['settings']['channels']
+                self.sampwidth = argument['settings']['sampwidth']
         else:
-            with open('audio.settings', 'w+') as file:
-                json.dump(self._argument, file, indent=4)
+            self.save_settings()
 
     def save_settings(self):
+        argument = {}
+        argument['settings'] = {}
+        argument['settings']['framerate'] = self.framerate
+        argument['settings']['num_samples'] = self.num_samples
+        argument['settings']['channels'] = self.channels
+        argument['settings']['sampwidth'] = self.sampwidth
+
         with open('audio.settings', 'w+') as file:
-            json.dump(self._argument, file, indent=4)
+            json.dump(argument, file, indent=4)
+
+    @property
+    def framerate(self):
+        return self.__framerate
+
+    @framerate.setter
+    def framerate(self, value):
+        if value >= 4000:
+            self.__framerate = value
+        else:
+            raise ValueError("framerate value can't below 4000")
+
+    @property
+    def num_samples(self):
+        return self.__num_samples
+
+    @num_samples.setter
+    def num_samples(self, value):
+        if value >= 0:
+            self.__num_samples = value
+        else:
+            raise ValueError("number samples can't below 0")
+
+    @property
+    def channels(self):
+        return self.__channels
+
+    @channels.setter
+    def channels(self, value):
+        if value == 1 or value == 2:
+            self.__channels = value
+        else:
+            raise ValueError("channels value with 1 or 2")
+
+    @property
+    def sampwidth(self):
+        return self.__sampwidth
+
+    @sampwidth.setter
+    def sampwidth(self, value):
+        if value > 0:
+            self.__sampwidth = value
+        else:
+            raise ValueError("sampwidth value can't below 0")
 
     @property
     def time(self):
-        return int( self._argument['settings']['framerate'] / self._argument['settings']['num_samples'] * self.second )
+        return int( self.framerate / self.num_samples * self.second )
 
     @property
     def second(self):
@@ -62,13 +114,13 @@ class Audio():
     def record(self):
         if self.hasDevice():
             pa = PyAudio()
-            stream = pa.open(format=paInt16,channels=self._argument['settings']['channels'],
-            rate=self._argument['settings']['framerate'],input=True,
+            stream = pa.open(format=paInt16,channels=self.channels,
+            rate=self.framerate,input=True,
             input_device_index=self.__getDevice(),
-            frames_per_buffer=self._argument['settings']['num_samples'])
+            frames_per_buffer=self.num_samples)
             my_buf = []
             for _ in trange(self.time):
-                string_audio_data = stream.read(self._argument['settings']['num_samples'])
+                string_audio_data = stream.read(self.num_samples)
                 my_buf.append(string_audio_data)
             self.save_wave(my_buf)
             stream.close()
@@ -99,9 +151,9 @@ class Audio():
 
     def save_wave(self, data):
         wf = wave.open(self.filename + ".wav",'wb')
-        wf.setnchannels(self._argument['settings']['channels'])
-        wf.setsampwidth(self._argument['settings']['sampwidth'])
-        wf.setframerate(self._argument['settings']['framerate'])
+        wf.setnchannels(self.channels)
+        wf.setsampwidth(self.sampwidth)
+        wf.setframerate(self.framerate)
         wf.writeframes(b"".join(data))
         wf.close()
 
