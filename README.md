@@ -2,9 +2,11 @@
 
 # Argument
 * -t, --time
->    set sound recording time, unit is second
-* -f, --file-name
->    set output file name
+>   set sound recording time, unit is second
+* -o, --output-name
+>   set output file name
+* -f, --framerate
+>   set recording framerate
 
 # using plugin
 * pyaudio
@@ -17,6 +19,13 @@
 > pip install tqdm  
 > * Anaconda  
 > conda install tqdm
+* pydub  
+> * Pip  
+> pip install pydub  
+> * Ubuntu/Debian Linux:  
+>  > apt-get install ffmpeg  
+> * Anaconda  
+> conda install -c conda-forge pydub  
 
 # class Audio
 
@@ -30,6 +39,34 @@
 ### save_settings(self)
     Description:
         save settings arguments in settings file
+### framerate(self)
+    Description:
+        get framerate
+    Return type: integer
+### framerate(self, value)
+    Description:
+        set framerate
+### num_samples(self)
+    Description:
+        get number samples
+    Return type: integer
+### num_samples(self, value)
+    Description:
+        set number samples
+### channels(self)
+    Description:
+        get channels
+    Return type: integer
+### channels(self, value)
+    Description:
+        set channels
+### sampwidth(self)
+    Description:
+        get sampwidth
+    Return type: integer
+### sampwidth(self, value)
+    Description:
+        set sampwidth
 ### time(self)
     Description:
         get recording time count
@@ -56,11 +93,11 @@
 ### play(self)
     Description:
         play audio file
-### __get_input_device(self)
+### __getDevice(self)
     Description:
         get input device index
     Return type: integer
-### check_device(self)
+### hasDevice(self)
     Description:
         check have input device
     Return type: boolean
