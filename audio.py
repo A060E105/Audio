@@ -3,13 +3,15 @@ from pyaudio import PyAudio, paInt16
 from tqdm import trange
 from argparse import ArgumentParser
 from os import path
+from pydub import AudioSegment
 import json
 import re
 
 def command_args():
     parse = ArgumentParser(description='sound record program')
     parse.add_argument('-t', '--time', type=int, required=True, dest='time', help='set sound recording time, unit is second')
-    parse.add_argument('-f', '--file-name', type=str, required=True, dest='filename', help='set output file name')
+    parse.add_argument('-o', '--output-name', type=str, required=True, dest='filename', help='set output file name')
+    parse.add_argument('-f', '--framerate', type=int, choices=range(1000, 100000), metavar='[1000-100000]', dest='framerate', help='set recording framerate')
     args = parse.parse_args()
     return args
 
@@ -159,7 +161,8 @@ class Audio():
 
     def save_mp3(self):
         print ('save mp3')
-        pass
+        sound = AudioSegment.from_mp3(self.filename + '.wav')
+        sound.export(self.filename + '.mp3', format='wav')
 
     def save_spectrogram(self):
         pass
@@ -168,5 +171,9 @@ if __name__ == '__main__':
     args = command_args()
     au = Audio(args.time)
     au.filename = args.filename
+    if args.framerate is not None:
+        au.framerate = args.framerate
+        au.save_settings()
     au.record()
+    au.save_mp3()
     au.play()
