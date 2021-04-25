@@ -6,6 +6,7 @@ from os import path
 from pydub import AudioSegment
 import json
 import re
+import Settings
 
 def command_args():
     parse = ArgumentParser(description='sound record program')
@@ -18,36 +19,33 @@ def command_args():
 class Audio():
     def __init__(self, sec):
         self.second = sec + 1
-        self.init_settings_argument()
-        self.get_settings_arguments()
+        self.init_audio_argument()
+        self.init_settings()
 
-    def init_settings_argument(self):
+    def init_audio_argument(self):
         self.framerate = 44100
         self.num_samples = 1024
         self.channels = 2
         self.sampwidth = 2
 
-    def get_settings_arguments(self):
-        if path.isfile('audio.settings'):
-            with open('audio.settings', 'r+') as file:
-                argument = json.load(file)
-                self.framerate = argument['settings']['framerate']
-                self.num_samples = argument['settings']['num_samples']
-                self.channels = argument['settings']['channels']
-                self.sampwidth = argument['settings']['sampwidth']
+    def init_settings(self):
+        self.__sf = Settings.Settings('audio.settings')
+        if self.__sf.hasSettings():
+            self.get_settings()
         else:
-            self.save_settings()
+            self.set_settings()
 
-    def save_settings(self):
-        argument = {}
-        argument['settings'] = {}
-        argument['settings']['framerate'] = self.framerate
-        argument['settings']['num_samples'] = self.num_samples
-        argument['settings']['channels'] = self.channels
-        argument['settings']['sampwidth'] = self.sampwidth
+    def set_settings(self):
+        self.__sf.setTitle('settings')
+        self.__sf.setSettings('settings', framerate=self.framerate, num_samples=self.num_samples, channels=self.channels, sampwidth=self.sampwidth)
+        self.__sf.save()
 
-        with open('audio.settings', 'w+') as file:
-            json.dump(argument, file, indent=4)
+    def get_settings(self):
+        data = self.__sf.getSettings('settings')
+        self.framerate = data['framerate']
+        self.num_samples = data['num_samples']
+        self.channels = data['channels']
+        self.sampwidth = data['sampwidth']
 
     @property
     def framerate(self):
@@ -173,7 +171,7 @@ if __name__ == '__main__':
     au.filename = args.filename
     if args.framerate is not None:
         au.framerate = args.framerate
-        au.save_settings()
+        au.set_settings()
     au.record()
     au.save_mp3()
     au.play()
