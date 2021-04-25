@@ -3,4 +3,5 @@
 *.mp3
 *.tar.gz
 example/
+__pycache__/
 audio.settings
